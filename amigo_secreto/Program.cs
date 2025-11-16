@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 
 class Program {
@@ -25,23 +24,38 @@ class Program {
             "Rosangela"
         };
 
+        // Pasta PAGES na raiz do projeto
+        string pastaPages = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "pages");
+        pastaPages = Path.GetFullPath(pastaPages); // normaliza
+
+        Console.WriteLine($"Pasta de saída: {pastaPages}");
+
+        // Criar pasta se não existir
+        Directory.CreateDirectory(pastaPages);
+
+        // 🔥 APAGAR TUDO dentro de pages/
+        Console.WriteLine("\nLimpando pasta pages/ ...");
+
+        foreach (string file in Directory.GetFiles(pastaPages))
+            File.Delete(file);
+
+        foreach (string dir in Directory.GetDirectories(pastaPages))
+            Directory.Delete(dir, true);
+
+        Console.WriteLine("Pasta pages/ limpa!\n");
+
         // Sorteio (derangement)
         List<string> sorteados = GerarDerangement(nomes);
 
-        // Criação de HTML links
-        string pasta = "links_amigo_secreto";
-        Directory.CreateDirectory(pasta);
-
         Console.WriteLine("Gerando links individuais...\n");
 
+        // Criar arquivos HTML na pasta pages
         for (int i = 0; i < nomes.Count; i++) {
             string nome = nomes[i];
             string quemTirou = sorteados[i];
 
-            string slug = GerarSlug(nome);
-            string token = GerarToken();
-
-            string arquivo = Path.Combine(pasta, $"{slug}_{token}.html");
+            // Nome do arquivo = Nome da pessoa.html
+            string arquivo = Path.Combine(pastaPages, $"{nome}.html");
 
             string html = GerarHtml(nome, quemTirou);
 
@@ -51,7 +65,6 @@ class Program {
         }
 
         Console.WriteLine("\nTudo pronto!");
-        Console.WriteLine("Agora envie cada HTML para o dono do arquivo.");
     }
 
     // Gera permutação onde ninguém recebe ele mesmo
@@ -74,23 +87,7 @@ class Program {
         return false;
     }
 
-    // "Vinicius" -> "vinicius"
-    static string GerarSlug(string nome) {
-        return nome.ToLower()
-                   .Replace(" ", "_")
-                   .Replace("ç", "c");
-    }
-
-    // Gera token aleatório tipo "k39dk2"
-    static string GerarToken() {
-        using (var rng = RandomNumberGenerator.Create()) {
-            byte[] bytes = new byte[4];
-            rng.GetBytes(bytes);
-            return BitConverter.ToString(bytes).Replace("-", "").ToLower();
-        }
-    }
-
-    // Gera o conteúdo da página HTML
+    // HTML da página
     static string GerarHtml(string nome, string tirou) {
         return $@"
 <!DOCTYPE html>
